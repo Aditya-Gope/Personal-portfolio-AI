@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
+# Frontend Dependencies
 node_modules
 
 # Build outputs
@@ -18,7 +18,27 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+*.env
 !.env.example
+backend/.env
+backend/.env.*
+backend/*.env
+
+# Python Backend & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.venv/
+venv/
+ENV/
+env/
+backend/__pycache__/
+backend/.venv/
+backend/venv/
+backend/ENV/
+backend/env/
 
 # Editor directories and files
 .vscode/*

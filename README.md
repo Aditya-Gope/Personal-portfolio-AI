@@ -71,7 +71,12 @@ A premium, futuristic AI-powered personal portfolio web application. Rather than
 
 ```
 personal-portfolio-ai/
-├── src/
+├── backend/                           # FastAPI Python Backend
+│   ├── .gitignore                     # Backend-specific secrets & venv ignore rules
+│   ├── main.py                        # FastAPI app with /chat, / & CORS middleware
+│   ├── my_resume.pdf                  # Aditya Gope's resume for runtime extraction
+│   └── requirements.txt               # Backend dependencies (fastapi, uvicorn, groq, pypdf)
+├── src/                               # Frontend React 19 application
 │   ├── components/
 │   │   ├── chat/
 │   │   │   ├── ChatContainer.tsx      # Chat feed scroller and message list
@@ -171,51 +176,74 @@ The frontend connects directly to your existing FastAPI endpoint:
   }
   ```
 
-### Optional: Enabling CORS in FastAPI (for standalone production deployments)
-If you deploy the frontend and backend to separate domains, add `CORSMiddleware` in your FastAPI `main.py`:
-
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # or specify your frontend domain e.g. ["https://adityagope.dev"]
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
+### CORS Middleware (Configured)
+The backend in `backend/main.py` is preconfigured with `CORSMiddleware` supporting:
+- Local development (`http://localhost:5173`, `http://localhost:3000`, `http://127.0.0.1:5173`)
+- All Vercel deployments via regex (`https://.*\.vercel\.app`)
+- Optional custom domains via the `FRONTEND_URL` environment variable.
 
 ---
 
-## 📦 GitHub Initialization Guide
+## ☁️ Deployment Guide
 
-To initialize Git and push this project to your GitHub repository:
+This repository contains both the frontend and backend, structured for independent zero-friction deployments on Vercel and Render.
+
+### 1. Backend Deployment on Render (Web Service)
+
+1. Sign in to your [Render Dashboard](https://dashboard.render.com).
+2. Click **New +** > **Web Service**.
+3. Connect your GitHub repository: `Personal-portfolio-AI`.
+4. Configure the service settings:
+   - **Name**: `aditya-personal-ai-backend` (or your preferred name)
+   - **Region**: Closest to your audience (e.g., Singapore or Oregon)
+   - **Branch**: `main`
+   - **Root Directory**: `backend` *(CRITICAL: tells Render to build only the backend folder)*
+   - **Runtime**: `Python`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Under **Environment Variables**, add:
+   - `GROQ_API_KEY`: `your_groq_api_key_here`
+   - *(Optional)* `FRONTEND_URL`: Your custom domain (if using a custom domain outside `*.vercel.app`)
+6. Click **Deploy Web Service**.
+7. Once deployed, copy your Render public URL (e.g., `https://aditya-personal-ai-backend.onrender.com`).
+
+---
+
+### 2. Frontend Deployment on Vercel
+
+1. Open your project on the [Vercel Dashboard](https://vercel.com).
+2. Verify that your Project Settings are configured for the repository root:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: `./` (default)
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. In **Settings > Environment Variables**, add / update:
+   - `VITE_API_BASE_URL`: `https://your-render-backend-name.onrender.com`
+   - `VITE_CHAT_ENDPOINT`: `/chat`
+   - `VITE_ENABLE_STREAMING`: `false`
+4. Trigger a **Redeploy** (or push a commit to `main`).
+5. Your Vercel frontend is now live and communicating with your Render FastAPI backend!
+
+---
+
+## 💻 Local Development
+
+Run frontend and backend simultaneously in local development:
 
 ```bash
-# 1. Initialize git
-git init
+# Terminal 1 - Start FastAPI Backend
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Or on Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 
-# 2. Stage all files (verifying .env is ignored by .gitignore)
-git add .
-
-# 3. Check staged files to ensure secrets and .env are excluded
-git status
-
-# 4. Create initial commit
-git commit -m "feat: complete Aditya Personal AI portfolio with FastAPI integration"
-
-# 5. Set default branch to main
-git branch -M main
-
-# 6. Add your remote GitHub repository URL
-git remote add origin https://github.com/adityagope/personal-portfolio-ai.git
-
-# 7. Push to GitHub (run only after you create the repo on GitHub)
-git push -u origin main
+# Terminal 2 - Start Frontend
+npm install
+npm run dev
 ```
 
-*(Note: Per your instructions, Git has not been pushed automatically. You can review the repository and push when you are ready!)*
+Visit `http://localhost:5173` to test the full end-to-end experience.
 
 ---
 
